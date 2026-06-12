@@ -1,0 +1,40 @@
+name: 安装或启动问题
+description: 报告安装失败、sidecar 未启动或诊断失败
+title: "[install] "
+labels:
+  - install
+body:
+  - type: input
+    id: antigravity-version
+    attributes:
+      label: Antigravity version
+      placeholder: "2.0.11"
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: "v22.x"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: 执行命令
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 输出
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 其他信息
+    validations:
+      required: false

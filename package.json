@@ -1,6 +1,6 @@
 {
   "name": "antigravity-zh-cn-pack",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Simplified Chinese pack for Antigravity Agent mode.",
   "private": true,
   "type": "module",
@@ -8,13 +8,17 @@
     "antigravity-zh-cn-localizer": "./src/sidecar.mjs"
   },
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "check": "node --check src/*.mjs scripts/*.mjs hooks/*.mjs test/*.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "doctor:strict": "node scripts/doctor.mjs --strict",
     "install:local": "node scripts/install.mjs",
     "audit": "node scripts/audit-ui.mjs --local --source live,bundle",
     "sidecar": "node src/sidecar.mjs",
     "test": "node --test test/*.test.mjs",
     "uninstall:local": "node scripts/uninstall.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "verify:strict": "node scripts/verify.mjs --strict"
   },
   "engines": {
     "node": ">=22.0.0"

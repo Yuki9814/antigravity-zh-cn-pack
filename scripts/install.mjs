@@ -10,6 +10,7 @@ import {
   PLUGINS_DIR,
   REPORTS_DIR,
   RUNTIME_DIR,
+  STATE_FILE,
   SUPPORTED_ANTIGRAVITY_VERSIONS,
   TARGET_ANTIGRAVITY_VERSION,
   rootFromImportMeta
@@ -54,8 +55,10 @@ async function preflight(force) {
 
 async function installPackage() {
   removeLaunchctlJob();
+  const stopped = stopSidecars();
   await ensureRuntimeDir();
   await fs.mkdir(REPORTS_DIR, { recursive: true });
+  await fs.rm(STATE_FILE, { force: true });
   const previous = await safeStat(INSTALL_DIR);
   if (previous) {
     await fs.rm(INSTALL_DIR, { recursive: true, force: true });
@@ -79,6 +82,7 @@ async function installPackage() {
     sourceRoot: root,
     targetRoot: INSTALL_DIR,
     installedFiles,
+    stoppedSidecars: stopped,
     antigravityVersion: await getAntigravityVersion()
   };
   await fs.writeFile(path.join(INSTALL_DIR, '.install-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -95,6 +99,33 @@ function removeLaunchctlJob() {
   } catch {
     // job may not exist
   }
+}
+
+function stopSidecars() {
+  let stopped = [];
+  try {
+    const output = childProcess.execFileSync('ps', ['-axo', 'pid=,command='], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+    for (const line of output.split(/\r?\n/)) {
+      if (!line.includes(PACKAGE_NAME) || !line.includes('sidecar.mjs')) {
+        continue;
+      }
+      const match = line.trim().match(/^(\d+)\s+/);
+      if (!match) {
+        continue;
+      }
+      const pid = Number(match[1]);
+      if (pid && pid !== process.pid) {
+        process.kill(pid, 'SIGTERM');
+        stopped.push(pid);
+      }
+    }
+  } catch {
+    stopped = [];
+  }
+  return stopped;
 }
 
 async function safeStat(targetPath) {

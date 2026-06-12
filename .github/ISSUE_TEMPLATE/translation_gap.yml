@@ -1,0 +1,42 @@
+name: 漏翻或误翻
+description: 报告 Antigravity UI 漏翻、误翻或保护区误伤
+title: "[translation] "
+labels:
+  - translation
+body:
+  - type: input
+    id: antigravity-version
+    attributes:
+      label: Antigravity version
+      placeholder: "2.0.11"
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "15.x / arm64"
+    validations:
+      required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: 页面或菜单路径
+      placeholder: "Agent mode > Settings > Models"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: 文案表现
+      description: 填写原始英文、当前显示、期望简中。
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 诊断输出
+      description: 粘贴 npm run doctor:strict 输出或 reports/ui-audit.json 相关片段。
+      render: shell
+    validations:
+      required: false

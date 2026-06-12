@@ -1,12 +1,12 @@
 {
   "name": "antigravity-zh-cn-pack",
   "displayName": "Antigravity 智能体模式简中包",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "为 Antigravity 智能体模式提供简体中文规则、技能、钩子与可回滚 UI 注入。",
   "publisher": "local",
   "license": "MIT",
   "engines": {
-    "antigravity": "2.0.11",
+    "antigravity": "2.0.11 || 2.1.4",
     "platform": "darwin-arm64"
   },
   "categories": [

@@ -21,13 +21,15 @@ const root = rootFromImportMeta(import.meta.url);
 
 async function main(argv = process.argv.slice(2)) {
   const local = argv.includes('--local');
+  const strict = argv.includes('--strict');
   const pluginRoot = local ? root : INSTALL_DIR;
-  const result = await verify(pluginRoot);
+  const result = await verify(pluginRoot, { strict });
   console.log(JSON.stringify(result, null, 2));
   process.exitCode = result.ok ? 0 : 1;
 }
 
-export async function verify(pluginRoot) {
+export async function verify(pluginRoot, options = {}) {
+  const strict = Boolean(options.strict);
   const checks = [];
   const warnings = [];
   const version = await getAntigravityVersion();
@@ -42,18 +44,35 @@ export async function verify(pluginRoot) {
 
   checks.push({ name: 'plugin-root', ok: Boolean(await safeStat(pluginRoot)), path: pluginRoot });
 
+  let dictionaryVersion = null;
   try {
-    await readDictionary(pluginRoot);
-    checks.push({ name: 'dictionary', ok: true });
+    const { dictionary } = await readDictionary(pluginRoot);
+    dictionaryVersion = dictionary.version ?? null;
+    checks.push({ name: 'dictionary', ok: true, version: dictionaryVersion });
   } catch (error) {
     checks.push({ name: 'dictionary', ok: false, error: error.message });
   }
 
   const state = await readState();
-  checks.push({ name: 'sidecar-state', ok: Boolean(state), path: STATE_FILE, state });
+  const stateVersion = findStateVersion(state);
+  const stateFresh = Boolean(state?.active) && (!dictionaryVersion || stateVersion === dictionaryVersion);
+  checks.push({
+    name: 'sidecar-state',
+    ok: strict ? stateFresh : true,
+    required: strict,
+    path: STATE_FILE,
+    expectedVersion: dictionaryVersion,
+    actualVersion: stateVersion,
+    state
+  });
+  if (!state) {
+    warnings.push('No sidecar state found yet. Restart Antigravity, open Agent mode, then run strict verification.');
+  } else if (dictionaryVersion && stateVersion && stateVersion !== dictionaryVersion) {
+    warnings.push(`Sidecar state version ${stateVersion} does not match dictionary version ${dictionaryVersion}.`);
+  }
 
   const ports = await discoverDebugPorts({ timeoutMs: 700 });
-  checks.push({ name: 'cdp-ports', ok: ports.length > 0, ports });
+  checks.push({ name: 'cdp-ports', ok: strict ? ports.length > 0 : true, required: strict, ports });
   if (ports.length === 0) {
     warnings.push('No Antigravity DevTools port detected. UI injection waits until a port is available.');
   }
@@ -70,9 +89,12 @@ export async function verify(pluginRoot) {
     }
   }
 
+  const activeInjection = injectionStatus.some((item) => item.ok && item.result?.active && (!dictionaryVersion || item.result?.version === dictionaryVersion));
   checks.push({
     name: 'injection-status',
-    ok: injectionStatus.length === 0 || injectionStatus.some((item) => item.ok && item.result?.active),
+    ok: strict ? activeInjection : true,
+    required: strict,
+    expectedVersion: dictionaryVersion,
     status: injectionStatus
   });
 
@@ -97,13 +119,22 @@ export async function verify(pluginRoot) {
   checks.push({ name: 'overtranslated-report', ok: true, path: OVERTRANSLATED_REPORT, exists: Boolean(await safeStat(OVERTRANSLATED_REPORT)) });
 
   return {
-    ok: checks.filter((check) => check.name !== 'cdp-ports' && check.name !== 'injection-status').every((check) => check.ok),
+    ok: checks.every((check) => check.ok),
+    strict,
     checkedAt: new Date().toISOString(),
     pluginRoot,
     checks,
     warnings,
     auditSummary: audit?.summary ?? null
   };
+}
+
+function findStateVersion(state) {
+  if (!state || !Array.isArray(state.injections)) {
+    return null;
+  }
+  const hit = state.injections.find((item) => item?.result?.version);
+  return hit?.result?.version ?? null;
 }
 
 async function safeStat(targetPath) {
