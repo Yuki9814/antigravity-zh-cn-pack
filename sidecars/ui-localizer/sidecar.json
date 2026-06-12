@@ -1,0 +1,17 @@
+{
+  "name": "ui-localizer",
+  "description": "扫描 Antigravity 本地 DevTools 端口并注入简中 UI 翻译器。",
+  "command": "node",
+  "args": [
+    "${pluginRoot}/src/sidecar.mjs",
+    "--watch"
+  ],
+  "env": {
+    "ANTIGRAVITY_ZH_CN_LOCALE": "zh-CN"
+  },
+  "restart": "on-failure",
+  "capabilities": [
+    "local-network",
+    "devtools"
+  ]
+}
