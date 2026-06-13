@@ -28,6 +28,8 @@ const COPY_ENTRIES = [
   'src',
   'translations',
   'scripts',
+  'docs',
+  'install.command',
   'README.md'
 ];
 

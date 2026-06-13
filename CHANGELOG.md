@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added `install.command` for double-click macOS installation.
+- Added `npm run first-run`, `npm run repair`, `npm run open-reports`, and `npm run package:release`.
+- Improved `setup.sh` Node.js 22+ preflight with actionable install guidance.
+- Made setup launch Antigravity with a fixed DevTools port when possible.
+- Reworked README for download-to-use flow and added troubleshooting/screenshot docs.
+- Added a release workflow that builds and uploads the ready-to-use zip package.
+
 ## 0.3.0
 
 - Added `bash setup.sh` as the fastest download-to-install entry.
